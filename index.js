@@ -9,20 +9,31 @@ exports.handler = async (event) => {
     });
 
     async function getLogs() {
-      const headers = { Authorization: `Bearer ${process.env["ACCOUNT_KEY"]}` };
-      console.log("ACCOUNT_KEY:", process.env["ACCOUNT_KEY"]);
-      const { data: querylogRequest } = await faunaClient.post(
-          "/api/v1/logs?type=query",
-          {
-              region_group: "us-std",
-              time_start: "2023-12-04T00:00:00.000Z",
-              time_end: "2024-01-04T00:00:00.000Z",
-              database: "us-std/test"
-          },
-          { headers }
-      );
-      console.log("Query Log Request:", querylogRequest);
-      await pollResults(querylogRequest, headers, "us-std");
+        const headers = { Authorization: `Bearer ${process.env["ACCOUNT_KEY"]}` };
+
+        // Get the current time
+        const currentTime = new Date();
+
+        // Calculate one hour ago from the current time
+        const oneHourAgo = new Date(currentTime.getTime() - 60 * 60 * 1000);
+
+        // Format the dates in ISO 8601 format
+        const timeStart = oneHourAgo.toISOString();
+        const timeEnd = currentTime.toISOString();
+
+        console.log("ACCOUNT_KEY:", process.env["ACCOUNT_KEY"]);
+        const { data: querylogRequest } = await faunaClient.post(
+            "/api/v1/logs?type=query",
+            {
+                region_group: "us-std",
+                time_start: timeStart,
+                time_end: timeEnd,
+                database: "us-std/random_numbers"
+            },
+            { headers }
+        );
+        console.log("Query Log Request:", querylogRequest);
+        await pollResults(querylogRequest, headers, "us-std");
   }
 
     if (process.env["ACCOUNT_KEY"] === undefined || process.env["DATADOG_API_KEY"] === undefined) {
